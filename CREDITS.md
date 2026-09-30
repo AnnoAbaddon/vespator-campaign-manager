@@ -1,7 +1,5 @@
 # Credits: graphics, fonts and icons
 
-German version: [CREDITS.md](CREDITS.md)
-
 Unofficial fan project; not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and related names and trademarks belong to their respective owners. This repository contains no Games Workshop artwork and no AI-generated images.
 
 ## Images: own procedural image pack

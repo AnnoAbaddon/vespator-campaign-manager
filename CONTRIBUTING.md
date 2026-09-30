@@ -46,7 +46,7 @@ Every behaviour change needs a unit test in `tests/engine/*.test.ts` (engine) or
 - Everything specific to one campaign system lives in `src/engine/modules/` behind the `CampaignModule` interface. Read [docs/MODULE.md](docs/MODULE.md) before adding rules or a new system; `tests/engine/demoModule.ts` is a minimal example module.
 - `src/server/` stores revisions in SQLite (`node:sqlite`) and handles auth, roles, uploads, notifications and backups.
 - `src/app/` and `src/components/` are the Next.js UI. The project uses Next.js 16, whose APIs differ from older versions. The matching documentation ships with the package in `node_modules/next/dist/docs/`.
-- The German specification is [SPEC.md](SPEC.md), and [docs/ROADMAP.md](docs/ROADMAP.md) summarises implemented features and open ideas. The user guide is [docs/GUIDE.md](docs/GUIDE.md) / [docs/GUIDE.de.md](docs/GUIDE.de.md). The app shows it on its Help page, so update it along with UI changes.
+- [docs/ROADMAP.md](docs/ROADMAP.md) summarises implemented features and open ideas. The user guide is [docs/GUIDE.md](docs/GUIDE.md) / [docs/GUIDE.de.md](docs/GUIDE.de.md). The app shows it on its Help page, so update it along with UI changes.
 
 ## Translations
 

@@ -1,6 +1,5 @@
 # Vespator Front Campaign Manager
 
-Deutsche Fassung: [README.de.md](README.de.md)
 
 A self-hosted web app for running a Warhammer 40,000 (10th edition) map campaign under the "War on the Vespator Front" rules from *500 Worlds: Titus*. It is written for clubs and gaming groups. One Warmaster (game master) runs the campaign, players take part through personal links, and anyone else can follow the war in a read-only view. The app works out the campaign consequences, keeps score and records the history of the campaign.
 
@@ -189,7 +188,6 @@ src/components/  /p/<token> (player pages), /hall, /liga, API routes
 | `tests/` | Vitest unit and integration tests, Playwright end-to-end tests |
 | `docs/` | User guide, rules FAQ, module interface, roadmap |
 
-The full (German) specification is in [SPEC.md](SPEC.md).
 
 ## Tests and CI
 
@@ -218,7 +216,7 @@ Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, chec
 
 The source code is licensed under the [MIT License](LICENSE).
 
-The license covers only the project's own code and documentation. Fonts, icons, textures and other third-party assets keep their own licenses; see [CREDITS.en.md](CREDITS.en.md) and the license files next to them. The MIT license grants no rights to Games Workshop trademarks, names or content, or to the book *500 Worlds: Titus*.
+The license covers only the project's own code and documentation. Fonts, icons, textures and other third-party assets keep their own licenses; see [CREDITS.md](CREDITS.md) and the license files next to them. The MIT license grants no rights to Games Workshop trademarks, names or content, or to the book *500 Worlds: Titus*.
 
 ## Further documentation
 
@@ -226,4 +224,4 @@ The license covers only the project's own code and documentation. Fonts, icons, 
 - [Rules FAQ](docs/FAQ.en.md) ([German](docs/FAQ.md)): decisions on open rules questions
 - [Module interface](docs/MODULE.md)
 - [Roadmap](docs/ROADMAP.md)
-- [Deployment](DEPLOY.md), [security](SECURITY.md), [specification](SPEC.md)
+- [Deployment](DEPLOY.md), [security](SECURITY.md)

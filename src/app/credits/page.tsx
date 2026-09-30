@@ -32,7 +32,7 @@ export default async function Credits() {
     (locale !== 'de' ? read('CREDITS.en.md') : null) ??
     read('CREDITS.md') ??
     (locale === 'en'
-      ? 'Icons: game-icons.net (CC BY 3.0) · Fonts: SIL Open Font License 1.1 · Image credits: see CREDITS.en.md in the source code'
+      ? 'Icons: game-icons.net (CC BY 3.0) · Fonts: SIL Open Font License 1.1 · Image credits: see CREDITS.md in the source code'
       : 'Icons: game-icons.net (CC BY 3.0) · Schriften: SIL Open Font License 1.1 · Bildnachweise: siehe CREDITS.md im Quellcode');
   const title = makeT(locale)('Nachweise');
   // Ein Bildschirm: Gehäuse mit Schild, der Text scrollt darin

@@ -1,6 +1,6 @@
 # Roadmap
 
-This page lists what the app already does beyond the base specification ([SPEC.md](../SPEC.md)) and what could come next. Please send proposals as a GitHub issue with the "Feature request" template. Quote reviews only briefly and with a source, and never include rules text from the book.
+This page lists what the app already does beyond the core campaign rules and what could come next. Please send proposals as a GitHub issue with the "Feature request" template. Quote reviews only briefly and with a source, and never include rules text from the book.
 
 New features follow a few principles. By default the app behaves as the book says, and every addition can be switched off. Everything works without AI features, either deterministically or from user input. Every page fits one screen on desktop and mobile, and engine changes come with unit tests.
 
