@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea or an improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not paste rules text from the book or other Games Workshop publications; describe the mechanic in your own words and name the page or section instead. Do not include secrets, player links, backups or personal data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What do you want to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who benefits?
+      multiple: true
+      options:
+        - Warmaster
+        - Players
+        - Readers / spectators
+        - Operators (hosting)
+        - Developers

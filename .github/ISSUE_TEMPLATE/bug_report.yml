@@ -1,0 +1,56 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste secrets or personal data.** No passwords, setup tokens, SMTP credentials, Discord tokens, player or reader links (`/p/...`, `/v/...`), invitation links, backups or database files, and no real player names or e-mail addresses. Redact logs and screenshots before you attach them.
+
+        Security problems: please report them privately as described in `SECURITY.md` (Security tab -> Report a vulnerability).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a campaign with 3 alliances
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Warmaster console
+        - Reader view
+        - Player page
+        - Notifications (e-mail, Discord, push)
+        - Setup, accounts, deployment
+        - Rules engine / campaign calculation
+        - Translations
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: See the health page (admin) or `git rev-parse --short HEAD`.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Docker or `npm start`, Node.js version, browser and device.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots (redacted)
+      render: text

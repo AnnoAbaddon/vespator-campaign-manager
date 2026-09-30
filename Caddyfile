@@ -1,0 +1,17 @@
+{$DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	# Backup-Import (ZIP inkl. Bilder) darf größer sein als normale Anfragen
+	@import path /api/import
+	request_body @import {
+		max_size 200MB
+	}
+	@other not path /api/import
+	request_body @other {
+		max_size 12MB
+	}
+	reverse_proxy app:3000
+}

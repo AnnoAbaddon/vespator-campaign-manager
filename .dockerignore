@@ -1,0 +1,30 @@
+node_modules
+.next
+.next-*
+.git
+.github
+# Laufzeitdaten, lokale Datenbanken und Sicherungen nie ins Image (auch nicht in die Build-Stufe)
+data
+uploads
+backups
+**/*.db
+**/*.db-*
+.shots
+.e2e
+.playtest
+# Geheimnisse
+.env
+.env.*
+!.env.example
+# Tests und Berichte
+tests
+test-results
+playwright-report
+scripts/tmp
+# Große Quellen, die der Build nicht braucht
+*.pdf
+rules
+example
+# Quellordner des Bildpakets (falls vorhanden); die ausgelieferten Bilder liegen unter public/
+public-pack
+tsconfig.tsbuildinfo

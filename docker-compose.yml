@@ -1,0 +1,83 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Build-Flavor der gezeichneten Motive (neutral | imperial), siehe .env.example
+        NEXT_PUBLIC_FLAVOR: ${NEXT_PUBLIC_FLAVOR:-neutral}
+        # Standardsprache des Builds (de | en | fr | es | pl), siehe .env.example
+        NEXT_PUBLIC_DEFAULT_LOCALE: ${NEXT_PUBLIC_DEFAULT_LOCALE:-en}
+    restart: unless-stopped
+    environment:
+      APP_URL: https://${DOMAIN}
+      # Die App läuft nur hinter Caddy: X-Forwarded-For stammt vom eigenen Proxy (Login-Rate-Limit je IP)
+      TRUST_PROXY: "1"
+      INSECURE_COOKIES: ${INSECURE_COOKIES:-0}
+      # Optional: fester Einmal-Token für die Ersteinrichtung (sonst steht ein zufälliger im Log)
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+      # Optional: SMTP ohne erzwungenes TLS erlauben (nur lokales Relay)
+      SMTP_ALLOW_INSECURE: ${SMTP_ALLOW_INSECURE:-0}
+      # Optional: SMTP per Umgebung (die Einstellungen im Konto haben Vorrang), siehe .env.example
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-0}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      # Speicherplatz für Bilder je Kampagne in MB
+      UPLOAD_QUOTA_MB: ${UPLOAD_QUOTA_MB:-200}
+      DISABLE_SCHEDULER: ${DISABLE_SCHEDULER:-0}
+      TZ: ${TZ:-Europe/Berlin}
+      # Automatische Backups in einem eigenen Volume – getrennt von der Datenbank (N5.1)
+      BACKUP_DIR: /app/backups
+    volumes:
+      # Benannte Volumes übernehmen beim ersten Start die Rechte aus dem Image (Nutzer "app")
+      - app_data:/app/data
+      - app_uploads:/app/uploads
+      - app_backups:/app/backups
+    # Härtung (DEPLOY.md „Container-Härtung“): schreibgeschütztes Dateisystem, beschreibbar sind nur die Volumes und
+    # die tmpfs-Mounts; keine Linux-Capabilities, keine Rechteausweitung, begrenzter Speicher und Prozesse.
+    # Der Container läuft als Nicht-Root-Nutzer "app" (Dockerfile).
+    read_only: true
+    tmpfs:
+      - /tmp
+      # Next.js-Cache (Bildoptimierung, Fetch-Cache)
+      - /app/.next/cache
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    pids_limit: 256
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.11.4
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    # Nur das Binden der Ports 80/443 ist erlaubt
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  app_data:
+  app_uploads:
+  app_backups:
+  caddy_data:
+  caddy_config:

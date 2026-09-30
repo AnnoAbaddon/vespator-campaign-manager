@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff1c4"/>
+      <stop offset=".45" stop-color="#e0b95c"/>
+      <stop offset="1" stop-color="#7a5c2c"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="10" fill="#120e0a"/>
+  <circle cx="32" cy="32" r="25" fill="#1b1610" stroke="url(#g)" stroke-width="4"/>
+  <g><path d="M32 32 L23.09 23.09 L28.12 30.39Z" fill="#fff1c4"/><path d="M32 32 L23.09 23.09 L30.39 28.12Z" fill="#a07a38"/><path d="M28.12 30.39 L23.09 23.09 L30.39 28.12" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L23.09 40.91 L30.39 35.88Z" fill="#fff1c4"/><path d="M32 32 L23.09 40.91 L28.12 33.61Z" fill="#a07a38"/><path d="M30.39 35.88 L23.09 40.91 L28.12 33.61" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L40.91 40.91 L35.88 33.61Z" fill="#fff1c4"/><path d="M32 32 L40.91 40.91 L33.61 35.88Z" fill="#a07a38"/><path d="M35.88 33.61 L40.91 40.91 L33.61 35.88" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L40.91 23.09 L33.61 28.12Z" fill="#fff1c4"/><path d="M32 32 L40.91 23.09 L35.88 30.39Z" fill="#a07a38"/><path d="M33.61 28.12 L40.91 23.09 L35.88 30.39" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L32 11 L30.39 28.12Z" fill="#fff1c4"/><path d="M32 32 L32 11 L33.61 28.12Z" fill="#a07a38"/><path d="M30.39 28.12 L32 11 L33.61 28.12" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L53 32 L35.88 30.39Z" fill="#fff1c4"/><path d="M32 32 L53 32 L35.88 33.61Z" fill="#a07a38"/><path d="M35.88 30.39 L53 32 L35.88 33.61" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L32 53 L33.61 35.88Z" fill="#fff1c4"/><path d="M32 32 L32 53 L30.39 35.88Z" fill="#a07a38"/><path d="M33.61 35.88 L32 53 L30.39 35.88" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><path d="M32 32 L11 32 L28.12 33.61Z" fill="#fff1c4"/><path d="M32 32 L11 32 L28.12 30.39Z" fill="#a07a38"/><path d="M28.12 33.61 L11 32 L28.12 30.39" fill="none" stroke="#2a1f10" stroke-width="0.6" stroke-linejoin="round"/><circle cx="32" cy="32" r="1.47" fill="#2a1f10"/></g>
+</svg>
