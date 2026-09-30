@@ -1,81 +1,81 @@
-# Deployment des Vespator Front Campaign Manager
+# Deploying the Vespator Front Campaign Manager
 
-Die App läuft als Docker-Container hinter [Caddy](https://caddyserver.com/). Caddy holt sich das HTTPS-Zertifikat (Let's Encrypt) selbst.
+The app runs as a Docker container behind [Caddy](https://caddyserver.com/). Caddy obtains the HTTPS certificate (Let's Encrypt) on its own.
 
-## Voraussetzungen
+## Requirements
 
-- Ein Server (VPS) mit Docker und Docker Compose
-- Eine Domain oder Subdomain, deren DNS-A/AAAA-Eintrag auf den Server zeigt
-- Offene Ports 80 und 443
-- Netzzugang beim Bauen: `npm ci` lädt die Pakete, und `next/font/google` lädt die Schriften (EB Garamond u. a.) von Google Fonts. Einen vollständig offline reproduzierbaren Build gibt es derzeit nicht.
+- A server (VPS) with Docker and Docker Compose
+- A domain or subdomain whose DNS A/AAAA record points to the server
+- Open ports 80 and 443
+- Network access during the build: `npm ci` downloads the packages, and `next/font/google` downloads the fonts (EB Garamond and others) from Google Fonts. A fully offline, reproducible build is not available at the moment.
 
 ## Installation
 
 ```bash
-git clone <dein-repo> vespator && cd vespator
+git clone <your-repo> vespator && cd vespator
 cp .env.example .env
-# .env bearbeiten: DOMAIN=kampagne.deine-domain.de
+# edit .env: DOMAIN=campaign.your-domain.com
 docker compose up -d --build
 ```
 
-Danach `https://kampagne.deine-domain.de` öffnen. Beim ersten Aufruf legst du das Spielleiter-Konto an (Benutzername und Passwort).
+Then open `https://campaign.your-domain.com`. On the first visit you create the game master account (username and password).
 
-**Setup-Token:** Die Ersteinrichtung verlangt einen Einmal-Token, damit niemand anderes eine frisch gestartete Instanz übernehmen kann. Solange kein Konto existiert, schreibt die App bei jedem Start einen neuen zufälligen Token ins Log:
+**Setup token:** The first-time setup asks for a one-time token so that nobody else can take over a freshly started instance. As long as no account exists, the app writes a new random token to the log on every start. The log line is in German:
 
 ```bash
 docker compose logs app | grep Ersteinrichtung
-# [Ersteinrichtung] Einmal-Token: … – https://kampagne.deine-domain.de/setup-admin?token=…
+# [Ersteinrichtung] Einmal-Token: … – https://campaign.your-domain.com/setup-admin?token=…
 ```
 
-Öffne den Link (der Token ist dann vorbelegt) oder kopiere den Token ins Feld *Setup-Token*. Du kannst auch einen eigenen Token in `.env` festlegen (`SETUP_TOKEN=…`, mindestens 16 Zeichen, z. B. `openssl rand -hex 24`); dann gilt nur dieser. Sobald das Konto angelegt ist, ist der Token wertlos, und `SETUP_TOKEN` kann wieder aus `.env` entfernt werden.
+Open the link (the token is then filled in) or copy the token into the *Setup token* field. You can also set your own token in `.env` (`SETUP_TOKEN=…`, at least 16 characters, e.g. `openssl rand -hex 24`); then only that token is accepted. Once the account exists, the token is useless and you can remove `SETUP_TOKEN` from `.env` again.
 
-## Daten
+## Data
 
-Die Daten liegen in benannten Docker-Volumes, nicht in Host-Ordnern. Der Container läuft als Nicht-Root-Nutzer `app`, und benannte Volumes übernehmen dessen Rechte automatisch.
+The data lives in named Docker volumes, not in host folders. The container runs as the non-root user `app`, and named volumes take over its permissions automatically.
 
-| Volume | Pfad im Container | Inhalt |
+| Volume | Path in the container | Contents |
 |---|---|---|
-| `app_data` | `/app/data/app.db` | SQLite-Datenbank (alle Kampagnen, Revisionen, Konto) |
-| `app_uploads` | `/app/uploads/` | Hochgeladene Bilder (Avatare, Logos, Schlachtfotos) |
-| `app_backups` | `/app/backups/` | Automatische und manuelle Backups je Kampagne (`BACKUP_DIR`) |
+| `app_data` | `/app/data/app.db` | SQLite database (all campaigns, revisions, account) |
+| `app_uploads` | `/app/uploads/` | Uploaded images (avatars, logos, battle photos) |
+| `app_backups` | `/app/backups/` | Automatic and manual backups per campaign (`BACKUP_DIR`) |
 
-Die Backups liegen in einem eigenen Volume. Geht das Daten-Volume kaputt oder wird es versehentlich gelöscht, bleiben die Sicherungen erhalten.
+The backups have a volume of their own. If the data volume breaks or is deleted by accident, the backups survive.
 
-> Willst du doch Host-Ordner mounten (`./data:/app/data`), müssen diese dem Container-Nutzer gehören, z. B. `sudo chown -R $(docker compose run --rm --entrypoint id app -u):$(docker compose run --rm --entrypoint id app -g) data uploads`. Sonst startet die App mit `SQLITE_CANTOPEN`.
+> If you want to mount host folders anyway (`./data:/app/data`), they must belong to the container user, e.g. `sudo chown -R $(docker compose run --rm --entrypoint id app -u):$(docker compose run --rm --entrypoint id app -g) data uploads`. Otherwise the app fails to start with `SQLITE_CANTOPEN`.
 
 ## Backup
 
-Die App sichert jede Kampagne automatisch täglich ab 03:00 Uhr (Serverzeit, `TZ`) als Komplett-ZIP (Stand, alle Revisionen, Bilder, Verwaltungsprotokoll) nach `BACKUP_DIR`. Im Docker-Setup ist das das eigene Volume `app_backups` unter `/app/backups`; ohne `BACKUP_DIR` gilt `$DATA_DIR/backups`. Der Tag zählt in derselben Zeitzone wie die Uhrzeit (`TZ`).
+Every day from 03:00 (server time, `TZ`) the app backs up each campaign as a full ZIP (current state, all revisions, images, admin audit log) to `BACKUP_DIR`. In the Docker setup this is the separate volume `app_backups` at `/app/backups`; without `BACKUP_DIR` the app uses `$DATA_DIR/backups`. The day is counted in the same time zone as the time of day (`TZ`).
 
-Von Hand legt *Einstellungen → Automatische Backups → Jetzt sichern* sofort ein zusätzliches ZIP an (Dateiname mit `-manuell`).
+*Settings → Automatic backups → Back up now* creates an extra ZIP right away (file name with `-manuell`).
 
-Je Kampagne bleiben die letzten 14 täglichen und zusätzlich die letzten 5 manuellen Sicherungen erhalten. Beide werden getrennt rotiert, manuelle Sicherungen verdrängen also keine täglichen. Archivierte Kampagnen sichert die App nur noch, solange es seit dem Archivieren kein Backup gibt. Schlägt die Sicherung einer Kampagne fehl, laufen die übrigen weiter; der Fehler steht auf der Health-Seite, und der nächste Durchgang (alle 5 Minuten) versucht es erneut.
+For each campaign the app keeps the last 14 daily and, separately, the last 5 manual backups. The two are rotated independently, so manual backups never push out daily ones. Archived campaigns are only backed up while there is no backup since they were archived. If the backup of one campaign fails, the others continue; the error shows on the health page, and the next run (every 5 minutes) tries again.
 
-Außerdem sichert die App täglich ab 03:00 Uhr die ganze Datenbank (`VACUUM INTO`, konsistent im laufenden Betrieb) nach `BACKUP_DIR/db/app-JJJJ-MM-TT.db`; die letzten 7 bleiben erhalten. Zum Wiederherstellen die App stoppen und die Datei als `DATA_DIR/app.db` einsetzen (vorher `app.db-wal` und `app.db-shm` entfernen).
+The app also backs up the whole database every day from 03:00 (`VACUUM INTO`, consistent while the app is running) to `BACKUP_DIR/db/app-YYYY-MM-DD.db` and keeps the last 7. To restore, stop the app and put the file in place as `DATA_DIR/app.db` (remove `app.db-wal` and `app.db-shm` first).
 
-**Backups enthalten Geheimnisse.** In den Datenbank-Sicherungen stehen SMTP-Passwort, Discord-Bot-Token, VAPID-Schlüssel, die Schlüssel der Einmal- und Abmeldelinks sowie die Spielerlinks. Schütze das Backup-Volume und heruntergeladene Sicherungen deshalb wie Zugangsdaten. Sitzungs-IDs sind nur gehasht enthalten.
+**Backups contain secrets.** The database backups hold the SMTP password, the Discord bot token, the VAPID keys, the keys for one-time and unsubscribe links, and the player links. Protect the backup volume and downloaded backups like credentials. Session IDs are stored only as hashes.
 
-Was wie zu schützen ist:
+What needs which protection:
 
-| Daten | Enthält | Schutz |
+| Data | Contains | Protection |
 |---|---|---|
-| Ganze Datenbank (`app.db`, Volume-Sicherungen, `BACKUP_DIR/db/*.db`) | alle Kampagnen, Kontakte, Passwort-Hashes, SMTP-Passwort, Discord-Token, VAPID-Privatschlüssel, HMAC-Schlüssel, Spielerlinks | wie Zugangsdaten; nie öffentlich teilen, nicht an Issues anhängen |
-| Server-Log | vor der Ersteinrichtung den Setup-Token (und damit die Übernahme der Instanz) | Log-Zugriff beschränken; nach der Einrichtung ist der Token wertlos |
-| Uploads (`/app/uploads`) | Avatare, Logos, Schlachtfotos (ggf. personenbezogen) | wie die Datenbank |
-| Kampagnen-Export (JSON/ZIP aus *Einstellungen → Export*) | eine Kampagne samt Historie und Bildern, ohne Spielerlinks und Instanz-Geheimnisse | nur an Vertrauenspersonen weitergeben (enthält Spielernamen, ggf. Kontaktdaten) |
+| Whole database (`app.db`, volume backups, `BACKUP_DIR/db/*.db`) | all campaigns, contacts, password hashes, SMTP password, Discord token, VAPID private key, HMAC keys, player links | like credentials; never share publicly, never attach to issues |
+| Server log | before the first-time setup, the setup token (and with it the takeover of the instance) | restrict log access; after setup the token is useless |
+| Uploads (`/app/uploads`) | avatars, logos, battle photos (possibly personal data) | like the database |
+| Campaign export (JSON/ZIP from *Settings → Export*) | one campaign with history and images, without player links and instance secrets | share only with people you trust (contains player names, possibly contact details) |
 
-Ein Kampagnen-Export ist also kein vollständiges Instanz-Backup, und ein Instanz-Backup ist deutlich sensibler als ein Export.
+A campaign export is therefore not a complete instance backup, and an instance backup is far more sensitive than an export.
 
-**Backups und Datenschutz:** Löschungen (Kontaktdaten eines Spielers, automatische Bereinigung nach Kampagnenende, Löschen einer Kampagne) wirken sofort in der Datenbank, in allen Revisionen und in den Sandboxes der Kampagne. Ältere Sicherungen enthalten die Daten noch, bis sie herausrotieren: tägliche Kampagnen-Backups nach 14 Tagen, manuelle nach 5 weiteren manuellen Sicherungen, Datenbank-Sicherungen nach 7 Tagen. Beim Löschen einer Kampagne entfernt die App auch deren Backup-Ordner. Externe Kopien (Volume-Sicherungen, heruntergeladene ZIPs) musst du selbst nachziehen. Stellst du eine ältere Sicherung wieder her, sind darin gelöschte Daten wieder da; die Löschungen danach also wiederholen.
+**Backups and privacy:** Deletions (a player's contact details, the automatic cleanup after a campaign ends, deleting a campaign) take effect immediately in the database, in all revisions and in the campaign's sandboxes. Older backups still contain the data until they rotate out: daily campaign backups after 14 days, manual ones after 5 further manual backups, database backups after 7 days. Deleting a campaign also removes its backup folder. External copies (volume backups, downloaded ZIPs) you have to clean up yourself. If you restore an older backup, data deleted since then is back, so repeat those deletions afterwards.
 
-**Wiederherstellen:** Unter *Einstellungen → Automatische Backups* siehst du das letzte Backup und kannst jede Sicherung als neue Kampagne wiederherstellen. Die App übernimmt die komplette Historie (Log, Undo, Phasen-Snapshots), damit Codex und Zeitraffer alle Bilder behalten, und trägt den Vorgang mit Kontonamen ins Verwaltungsprotokoll ein. Weil Wiederherstellen eine neue Kampagne anlegt, ist es (wie Anlegen und Importieren) nur Admins erlaubt. Die Kopie startet mit ausgeschalteter Leseansicht und erscheint auch nicht in der Hall of Fame oder Liga. Veröffentlichen musst du sie selbst unter *Einstellungen*.
+**Restoring:** *Settings → Automatic backups* shows the latest backup and lets you restore any backup as a new campaign. The app takes over the complete history (log, undo, phase snapshots), so the Codex and the timelapse keep all their images, and records the restore with the account name in the admin audit log. Because restoring creates a new campaign, only admins may do it (as with creating and importing). The copy starts with the public view switched off and does not appear in the Hall of Fame or the league. You publish it yourself under *Settings*.
 
-> **Umstieg von älteren Versionen:** Früher lagen die Backups unter `/app/data/backups`. Sie bleiben dort liegen, erscheinen aber nicht mehr in der App. Bei Bedarf einmalig kopieren: `docker compose exec app sh -c 'cp -a /app/data/backups/. /app/backups/'`.
+> **Upgrading from older versions:** Backups used to be stored under `/app/data/backups`. They stay there but no longer show up in the app. If you need them, copy them once: `docker compose exec app sh -c 'cp -a /app/data/backups/. /app/backups/'`.
 
-Da auch der Server selbst ausfallen kann, empfiehlt sich zusätzlich:
+The server itself can fail too, so we also recommend:
 
-1. Nach jeder abgeschlossenen Phase unter *Einstellungen → Export → Komplett-Backup (ZIP inkl. Bilder)* die Kampagne herunterladen.
-2. Regelmäßig das ganze Volume sichern:
+1. After each completed phase, download the campaign under *Settings → Export → Full backup (ZIP incl. images)*.
+2. Back up the whole volume regularly:
 
 ```bash
 docker compose stop app
@@ -83,70 +83,70 @@ docker run --rm --volumes-from $(docker compose ps -aq app) -v "$PWD":/backup bu
 docker compose start app
 ```
 
-Ein ZIP- oder JSON-Backup lässt sich unter *Kampagnen → Backup importieren* wieder einspielen (nur Admins). Es entsteht immer eine neue Kampagne; ein ZIP bringt Bilder und Historie mit, ein JSON nur den aktuellen Stand.
+You can load a ZIP or JSON backup again under *Campaigns → Import backup* (admins only). This always creates a new campaign; a ZIP brings images and history along, a JSON only the current state.
 
-**Größenlimit beim Import:** Caddy nimmt für `/api/import` höchstens 200 MB an (`request_body … max_size 200MB` im `Caddyfile`), und die App prüft dieselbe Grenze. Alle anderen Anfragen sind auf 12 MB begrenzt. Größere Backups vorher verkleinern (z. B. Fotos entfernen) oder das Limit an beiden Stellen anheben (`Caddyfile` und `MAX_BYTES` in `src/app/api/import/route.ts`). Persönliche Spielerlinks gehören absichtlich nicht zum Backup und müssen nach einer Wiederherstellung neu erzeugt werden.
+**Import size limit:** Caddy accepts at most 200 MB for `/api/import` (`request_body … max_size 200MB` in the `Caddyfile`), and the app checks the same limit. All other requests are limited to 12 MB. Shrink larger backups first (e.g. remove photos) or raise the limit in both places (`Caddyfile` and `MAX_BYTES` in `src/app/api/import/route.ts`). Personal player links are deliberately left out of backups and have to be generated again after a restore.
 
-## Benachrichtigungen
+## Notifications
 
-- **E-Mail nur verschlüsselt:** Auf Port 465 (`SMTP_SECURE=1` bzw. *TLS direkt*) läuft die Verbindung von Anfang an über TLS, auf allen anderen Ports ist STARTTLS Pflicht (mindestens TLS 1.2). Bietet der Server kein STARTTLS an, schlägt der Versand fehl, statt Passwort und Mails im Klartext zu senden. Nur für ein lokales Relay ohne TLS (z. B. Postfix auf demselben Host) gibt es die Ausnahme *Unverschlüsselt erlauben (nur lokales Relay)* in den SMTP-Einstellungen bzw. `SMTP_ALLOW_INSECURE=1` für alle Konfigurationen. **Nach dem Update prüfen:** Wer bisher einen Server ohne STARTTLS auf Port 25/587 nutzte, muss diese Ausnahme ausdrücklich setzen, sonst bleiben Mails im Versandprotokoll als fehlgeschlagen stehen.
+- **Email only over encrypted connections:** On port 465 (`SMTP_SECURE=1` or *Direct TLS*) the connection uses TLS from the start; on all other ports STARTTLS is required (at least TLS 1.2). If the server does not offer STARTTLS, sending fails instead of sending the password and mails in plain text. For a local relay without TLS (e.g. Postfix on the same host) there is one exception: *Allow unencrypted (local relay only)* in the SMTP settings, or `SMTP_ALLOW_INSECURE=1` for all configurations. **Check after the update:** If you used a server without STARTTLS on port 25/587, you have to set this exception explicitly, otherwise mails stay in the delivery log as failed.
 
-- Discord: je Kampagne unter *Einstellungen → Benachrichtigungen* einen Webhook eintragen (Discord: Kanal → Integrationen → Webhooks).
-- E-Mail: SMTP global unter *Konto → E-Mail-Versand* oder per Umgebungsvariablen (siehe unten). Spieler brauchen eine E-Mail-Adresse im Spielerprofil.
-- Ein Hintergrund-Timer im Serverprozess verschickt die Warteschlange (Outbox in der Datenbank) jede Minute und prüft alle 5 Minuten die Deadlines (48 h / 12 h vorher). Jede Nachricht wird nur einmal eingereiht (eindeutiger Schlüssel je Ereignis und Empfänger), auch nach Neustarts.
-- Die Zustellung gilt „mindestens einmal“: Bricht der Prozess genau zwischen Versand und Quittung ab, geht die Nachricht nach dem Neustart noch einmal hinaus. Im seltenen Fall kommt sie also doppelt an, verloren geht sie nicht.
-- Schlägt ein Versand fehl, folgt der nächste Versuch mit wachsendem Abstand (1, 2, 4, 8 … Minuten). Nach 8 Fehlversuchen gilt die Nachricht als fehlgeschlagen. Discord-Rate-Limits (HTTP 429) zählen nicht als Fehlversuch; die App sendet nach der von Discord genannten Wartezeit erneut.
-- Unter *Einstellungen → Benachrichtigungen → Versandprotokoll* setzt der Knopf *Fehlgeschlagene erneut senden* alle fehlgeschlagenen Nachrichten der Kampagne zurück und startet den Versand sofort.
-- **`APP_URL` setzen:** Links in E-Mails, Push- und Discord-Nachrichten (Spielerseite, Leseansicht, Abmeldelink, Einmal-Link) bauen auf `APP_URL` auf. Ohne die Variable gilt die Adresse, die ein Admin unter *Konto → Dienste → Öffentliche Adresse* ausdrücklich gespeichert hat, sonst `http://localhost:3000`. Aus Anfragen (Host-Header) übernimmt die App nie eine Adresse. Ältere Versionen haben sich die zuletzt gesehene Admin-Adresse gemerkt; dieser Wert wird nicht mehr verwendet. Im Docker-Setup ist `APP_URL=https://$DOMAIN` bereits gesetzt.
-- **E-Mails enthalten den persönlichen Spielerlink:** Jede Benachrichtigung an einen Spieler nennt seinen geheimen Link zur Spielerseite (und ggf. einen Einmal-Link zum Bestätigen). Wer die Mail liest oder weiterleitet, kann im Namen des Spielers handeln. Nutze deshalb nur vertrauenswürdige SMTP-Anbieter, bitte die Spieler, Benachrichtigungen nicht weiterzuleiten, und sperre einen durchgesickerten Link unter *Spielerlinks* oder erzeuge ihn neu. Das macht auch Kalender-Abo, Push-Abos, Discord-Verknüpfung und alle Einmal-Links dieses Spielers ungültig. Je Spieler ist genau eine E-Mail-Adresse erlaubt (keine Listen).
-- Test-E-Mails darf nur ein Admin verschicken, an genau eine Adresse und höchstens 5 pro Stunde. Co-Warmaster können nur den Discord-Test auslösen.
-- Wird ein Spieler gelöscht oder (weil er schon gespielt hat) nur deaktiviert, sperrt die App seinen Spielerlink samt Push-Abos, Discord-Verknüpfung, Kalender-Abo und Einmal-Links. Nach einer Reaktivierung muss der Spielleiter den Link unter *Spielerlinks* neu erzeugen.
-- Web-Push geht nur an die bekannten Push-Dienste der Browser (`fcm.googleapis.com`, `*.push.services.mozilla.com`, `*.notify.windows.com`, `web.push.apple.com`, `*.push.apple.com`); andere Endpunkte lehnt die App ab. Je Spielerlink bzw. Konto gelten höchstens 5 Geräte, ein weiteres ersetzt das älteste. Ausgehende Anfragen (Discord, Push, SMTP) brechen nach 10 Sekunden ab.
+- Discord: add a webhook per campaign under *Settings → Notifications* (in Discord: channel → Integrations → Webhooks).
+- Email: configure SMTP globally under *Account → Email delivery (SMTP)* or with environment variables (see below). Players need an email address in their player profile.
+- A background timer in the server process sends the queue (the outbox in the database) every minute and checks the deadlines every 5 minutes (48 h / 12 h before). Each message is queued only once (unique key per event and recipient), also across restarts.
+- Delivery is "at least once": if the process stops exactly between sending and acknowledging, the message goes out again after the restart. In rare cases it arrives twice, but it is never lost.
+- If sending fails, the next attempt follows after a growing delay (1, 2, 4, 8 … minutes). After 8 failed attempts the message counts as failed. Discord rate limits (HTTP 429) do not count as failed attempts; the app sends again after the wait time Discord gives.
+- Under *Settings → Notifications → Delivery log*, the button *Resend failed messages* resets all failed messages of the campaign and starts sending right away.
+- **Set `APP_URL`:** Links in email, push and Discord messages (player page, public view, unsubscribe link, one-time link) are built from `APP_URL`. Without it the app uses the address an admin explicitly saved under *Account → Services → Public address*, and otherwise `http://localhost:3000`. The app never takes an address from requests (Host header). Older versions remembered the last admin address they saw; that value is no longer used. The Docker setup already sets `APP_URL=https://$DOMAIN`.
+- **Emails contain the personal player link:** Every notification to a player includes their secret link to the player page (and possibly a one-time link to confirm). Anyone who reads or forwards the mail can act on the player's behalf. Use only trustworthy SMTP providers, ask players not to forward notifications, and revoke a leaked link under *Player links* or generate a new one. That also invalidates the calendar subscription, push subscriptions, Discord link and all one-time links of that player. Each player may have exactly one email address (no lists).
+- Only an admin may send test emails, to exactly one address and at most 5 per hour. Co-warmasters can only trigger the Discord test.
+- When a player is deleted or (because they have already played) only deactivated, the app revokes their player link together with push subscriptions, Discord link, calendar subscription and one-time links. After reactivation the game master has to generate the link again under *Player links*.
+- Web push goes only to the browsers' known push services (`fcm.googleapis.com`, `*.push.services.mozilla.com`, `*.notify.windows.com`, `web.push.apple.com`, `*.push.apple.com`); the app rejects other endpoints. Each player link or account can have at most 5 devices; a new one replaces the oldest. Outgoing requests (Discord, push, SMTP) time out after 10 seconds.
 
-## Anmeldung und Rate-Limit
+## Login and rate limit
 
-Nach 5 Fehlversuchen in 15 Minuten sperrt die Anmeldung je IP-Adresse; ab 20 Fehlversuchen für denselben Benutzernamen wird jede Anmeldung um 3 Sekunden gebremst. Die IP-Adresse liest die App nur mit `TRUST_PROXY=1` aus `X-Forwarded-For` bzw. `X-Real-IP`, also nur, wenn sie ausschließlich hinter dem eigenen Reverse Proxy erreichbar ist (im Docker-Setup gesetzt, Caddy setzt die Kopfzeilen). Ohne `TRUST_PROXY` könnte jeder Client die Kopfzeilen fälschen, deshalb teilen sich dann alle Anmeldungen ein gemeinsames Limit (Next.js gibt Server Actions keine Socket-Adresse). Läuft die App ohne Proxy direkt im Internet, sperren 5 Fehlversuche von irgendwem die Anmeldung für alle für 15 Minuten.
+After 5 failed attempts within 15 minutes, login is blocked per IP address; from 20 failed attempts for the same username, every login is slowed down by 3 seconds. The app reads the IP address from `X-Forwarded-For` or `X-Real-IP` only with `TRUST_PROXY=1`, so only set it when the app is reachable exclusively through your own reverse proxy (set in the Docker setup, where Caddy sets the headers). Without `TRUST_PROXY` any client could forge the headers, so all logins then share one common limit (Next.js gives Server Actions no socket address). If the app runs directly on the internet without a proxy, 5 failed attempts from anyone block login for everyone for 15 minutes.
 
-Abgelaufene Sitzungen, verschickte Nachrichten älter als 30 Tage, verbrauchte Einmal-Links und abgelaufene Discord-Codes räumt die App alle 5 Minuten auf.
+Every 5 minutes the app cleans up expired sessions, sent messages older than 30 days, used one-time links and expired Discord codes.
 
-Erfolgreiche Anmeldungen, Fehlversuche und Sperren durch das Rate-Limit stehen im Verwaltungsprotokoll (*Konto*, nur für Admins sichtbar), mit Benutzername und gekürzter IP-Adresse (IPv4 /24, IPv6 /48), nie mit Passwort. Fehlversuche und Sperren trägt die App je IP höchstens einmal pro Minute ein. Nach 90 Tagen werden die Einträge gelöscht.
+Successful logins, failed attempts and rate-limit blocks appear in the admin audit log (*Account*, visible to admins only), with the username and a shortened IP address (IPv4 /24, IPv6 /48), never with the password. The app records failed attempts and blocks at most once per minute per IP. The entries are deleted after 90 days.
 
-## Sitzungen und Passwörter
+## Sessions and passwords
 
-- Eine Sitzung gilt 30 Tage ab der letzten Nutzung, höchstens aber 90 Tage ab der Anmeldung; danach ist eine neue Anmeldung nötig. Eine Anmeldung beendet die vorherige Sitzung desselben Browsers, Abmelden und Passwortwechsel beenden die Sitzungen serverseitig.
-- Sitzungs-IDs stehen nur als SHA-256-Hash in der Datenbank, Datenbank-Sicherungen enthalten also keine gültigen Anmelde-Cookies.
-- Über HTTPS heißt das Sitzungs-Cookie `__Host-vf_session` (an Host, `Secure` und `Path=/` gebunden, Nachbar-Subdomains können es nicht unterschieben). Mit `INSECURE_COOKIES=1` (lokale HTTP-Tests) heißt es weiter `vf_session`.
-- **Einmalige Abmeldung beim Update:** Beim ersten Start dieser Version löscht die App alle bestehenden Sitzungen (Umstellung auf gehashte IDs). Alle Konten müssen sich einmal neu anmelden; Daten gehen dabei nicht verloren.
-- Neue Passwörter (Ersteinrichtung, Einladung, Passwortwechsel) haben 10 bis 256 Zeichen und dürfen keines der verbreitetsten Passwörter sein (eingebaute Sperrliste). Bestehende Passwörter bleiben gültig.
+- A session lasts 30 days from its last use, but at most 90 days from login; after that you have to log in again. Logging in ends the previous session of the same browser; logging out and changing the password end sessions on the server.
+- Session IDs are stored in the database only as SHA-256 hashes, so database backups contain no valid login cookies.
+- Over HTTPS the session cookie is called `__Host-vf_session` (bound to the host, `Secure` and `Path=/`, so neighboring subdomains cannot plant one). With `INSECURE_COOKIES=1` (local HTTP tests) it keeps the name `vf_session`.
+- **One-time logout on update:** On the first start of this version the app deletes all existing sessions (switch to hashed IDs). All accounts have to log in once more; no data is lost.
+- New passwords (first-time setup, invitation, password change) have 10 to 256 characters and must not be one of the most common passwords (built-in block list). Existing passwords stay valid.
 
-## Sicherheits-Kopfzeilen
+## Security headers
 
-Die App setzt für jede Antwort (auch statische Dateien, Uploads und Prefetch-Anfragen) `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` (Kamera, Mikrofon, Standort, Zahlungen u. a. aus), `Cross-Origin-Opener-Policy: same-origin` und `Cross-Origin-Resource-Policy: same-origin`. Seiten mit geheimen Links sowie Verwaltung und Anmeldung bekommen zusätzlich `X-Robots-Tag: noindex, nofollow`. Wegen `same-origin` gehen Spieler- und Leselinks, die geheime Schlüssel enthalten, nie als Referrer an fremde Seiten. `no-referrer` ginge nicht, weil Browser dann bei eigenen Formularen `Origin: null` senden und Next.js die Aktionen ablehnt. Die Content-Security-Policy mit Nonce setzt der Proxy der App, HSTS setzt Caddy. Eigene POST-Endpunkte (`/api/import`, `/api/discord/interactions`) lehnen Anfragen fremder Seiten ab (`Origin`/`Sec-Fetch-Site`).
+For every response (including static files, uploads and prefetch requests) the app sets `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` (camera, microphone, location, payment and others off), `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Resource-Policy: same-origin`. Pages with secret links, the admin area and the login also get `X-Robots-Tag: noindex, nofollow`. Because of `same-origin`, player and public-view links that contain secret keys are never sent as a referrer to other sites. `no-referrer` would not work, because browsers then send `Origin: null` with the app's own forms and Next.js rejects the actions. The app's proxy sets the Content Security Policy with a nonce, and Caddy sets HSTS. The app's own POST endpoints (`/api/import`, `/api/discord/interactions`) reject requests from other sites (`Origin`/`Sec-Fetch-Site`).
 
-> **Caddy-Zugriffsprotokoll:** Standardmäßig protokolliert Caddy keine Zugriffe. Wer eine `log`-Direktive ergänzt, schreibt die geheimen Links (`/p/…`, `/v/…`, `/kalender/…`, Einladungen) auf die Platte. Dann die URI filtern (`log { format filter { request>uri … } }`) oder kein Zugriffsprotokoll führen.
+> **Caddy access log:** By default Caddy does not log requests. If you add a `log` directive, the secret links (`/p/…`, `/v/…`, `/kalender/…`, invitations) end up on disk. In that case filter the URI (`log { format filter { request>uri … } }`) or keep no access log.
 
-## Datenschutz und Impressum
+## Privacy notice and imprint
 
-Unter *Konto → Administration → Datenschutz und Impressum* hinterlegst du als Admin beide Texte (Markdown). Sie erscheinen unter `/datenschutz` und `/impressum` und sind im Fuß der Anmeldung, der Leseansicht, der Spielerseite und der Verwaltung verlinkt.
+As an admin you enter both texts (Markdown) under *Account → Administration → Privacy notice and imprint*. They appear at `/datenschutz` and `/impressum` and are linked in the footer of the login page, the public view, the player page and the admin area.
 
-- Datenschutz: Ohne eigenen Text zeigt die App eine neutrale Vorlage in der Sprache des Lesers (welche Daten gespeichert werden, Empfänger wie SMTP-Anbieter, Discord und Push-Dienste, Speicherdauer, Rechte), mit dem deutlichen Hinweis, dass der Verantwortliche noch fehlt. Die Vorlage ersetzt keine Prüfung. Name bzw. Verein, Anschrift und Kontakt musst du selbst eintragen; dazu kannst du die Vorlage kopieren und ergänzen.
-- Impressum: Ohne Eintrag steht dort nur ein Hinweis, dass keines hinterlegt ist. Für Vereine und „geschäftsmäßige“ Angebote ist in Deutschland ein Impressum nach § 5 DDG üblich.
+- Privacy notice: without your own text the app shows a neutral template in the reader's language (which data is stored, recipients such as the SMTP provider, Discord and push services, retention period, rights), with a clear note that the controller is still missing. The template does not replace a legal review. You have to add your name or club, address and contact yourself; you can copy the template and fill it in.
+- Imprint: without an entry, the page only says that none has been provided. In Germany, clubs and "business-like" services usually need an imprint under § 5 DDG.
 
-## Kalender-Abo
+## Calendar subscription
 
-Jede Spielerseite zeigt einen Kalender-Link der Form `/kalender/<kampagne>/<spieler>/<schlüssel>.ics` mit den bestätigten Schlachtterminen des Spielers. Der Link ist nur lesend. Er erlaubt keine Aktionen und verrät den persönlichen Spielerlink nicht, darf also an Kalenderdienste (Google, Apple, Outlook) weitergegeben werden. Der Schlüssel hängt von einem zufälligen Geheimnis in der Datenbank und vom gültigen Spielerlink ab: Wird der Spielerlink gesperrt oder neu erzeugt, ist auch der Kalender-Link ungültig (die Spielerseite zeigt danach den neuen).
+Every player page shows a calendar link of the form `/kalender/<campaign>/<player>/<key>.ics` with the player's confirmed battle dates. The link is read-only. It allows no actions and does not reveal the personal player link, so it can be given to calendar services (Google, Apple, Outlook). The key depends on a random secret in the database and on the valid player link: if the player link is revoked or regenerated, the calendar link becomes invalid as well (the player page then shows the new one).
 
-## Web-App und Service Worker
+## Web app and service worker
 
-Die App ist als PWA installierbar. Der Service Worker (`/sw.js`) wird mit der Build-Kennung registriert (`/sw.js?v=<BUILD_ID>`), sodass jeder neue Build den alten Service Worker und seine Caches ersetzt. Ohne Angabe erzeugt jeder Build eine neue Kennung. Optional lässt sie sich festlegen, z. B. auf den Git-Commit:
+The app can be installed as a PWA. The service worker (`/sw.js`) is registered with the build ID (`/sw.js?v=<BUILD_ID>`), so every new build replaces the old service worker and its caches. By default each build generates a new ID. You can set it yourself, e.g. to the Git commit:
 
 ```bash
 docker compose build --build-arg BUILD_ID=$(git rev-parse --short HEAD) && docker compose up -d
-# ohne Docker
+# without Docker
 BUILD_ID=$(git rev-parse --short HEAD) npm run build
 ```
 
-Offline lesbar bleiben die Leseansicht und, für höchstens 24 Stunden, die Spielerseiten. Ein gesperrter oder erneuerter Spielerlink entfernt beim nächsten Aufruf mit Verbindung alle zwischengespeicherten Seiten dieses Links. Auf gemeinsam genutzten Geräten die Website-Daten des Browsers löschen, wenn ein Spieler das Gerät abgibt.
+The public view stays readable offline, and so do the player pages for at most 24 hours. A revoked or renewed player link removes all cached pages of that link on the next visit with a connection. On shared devices, clear the browser's site data when a player hands the device over.
 
 ## Update
 
@@ -155,25 +155,25 @@ git pull
 docker compose build --pull && docker compose up -d
 ```
 
-`--pull` holt dabei die aktuellen Basis-Images. Die Images sind auf feste Versionen gepinnt (`Dockerfile`: `NODE_IMAGE=node:24.21.0-slim`, `docker-compose.yml`: `caddy:2.11.4`). Für Sicherheitsupdates von Node.js oder Caddy den Tag anheben und neu bauen. Am besten einmal im Monat neu bauen.
+`--pull` fetches the current base images. The images are pinned to fixed versions (`Dockerfile`: `NODE_IMAGE=node:24.21.0-slim`, `docker-compose.yml`: `caddy:2.11.4`). For security updates of Node.js or Caddy, raise the tag and rebuild. Rebuilding once a month is a good habit.
 
-## Container-Härtung
+## Container hardening
 
-`docker-compose.yml` startet die App mit eingeschränkten Rechten:
+`docker-compose.yml` starts the app with restricted privileges:
 
-| Einstellung | Wirkung |
+| Setting | Effect |
 |---|---|
-| `read_only: true` | Dateisystem des Containers schreibgeschützt; beschreibbar sind nur die Volumes `/app/data`, `/app/uploads`, `/app/backups` |
-| `tmpfs: /tmp, /app/.next/cache` | flüchtige Verzeichnisse im Arbeitsspeicher (Temporärdateien, Next.js-Cache) |
-| `cap_drop: [ALL]` | keine Linux-Capabilities |
-| `security_opt: no-new-privileges:true` | keine Rechteausweitung (setuid) |
-| `mem_limit: 1g` | Speichergrenze (HEIC-Umwandlung braucht bis zu ~512 MB) |
-| `pids_limit: 256` | Höchstzahl an Prozessen/Threads |
-| `USER app` (Dockerfile) | Die App läuft als Nicht-Root-Nutzer |
+| `read_only: true` | Container file system is read-only; only the volumes `/app/data`, `/app/uploads`, `/app/backups` are writable |
+| `tmpfs: /tmp, /app/.next/cache` | volatile directories in memory (temporary files, Next.js cache) |
+| `cap_drop: [ALL]` | no Linux capabilities |
+| `security_opt: no-new-privileges:true` | no privilege escalation (setuid) |
+| `mem_limit: 1g` | memory limit (HEIC conversion needs up to ~512 MB) |
+| `pids_limit: 256` | maximum number of processes/threads |
+| `USER app` (Dockerfile) | the app runs as a non-root user |
 
-Caddy läuft mit `cap_drop: [ALL]`, `cap_add: [NET_BIND_SERVICE]` und `no-new-privileges`. **Nach dem Update einmal testen:** anmelden, ein Bild (auch HEIC) hochladen, ein Backup anlegen und importieren. Meldet das Log `EROFS` (read-only file system) oder bricht die App mit Speicherfehlern ab, den betreffenden Pfad als `tmpfs` ergänzen bzw. `mem_limit` erhöhen; notfalls `read_only` auskommentieren.
+Caddy runs with `cap_drop: [ALL]`, `cap_add: [NET_BIND_SERVICE]` and `no-new-privileges`. **Test once after the update:** log in, upload an image (including HEIC), create a backup and import it. If the log reports `EROFS` (read-only file system) or the app crashes with memory errors, add the affected path as `tmpfs` or raise `mem_limit`; as a last resort, comment out `read_only`.
 
-## Lokaler Test ohne HTTPS
+## Local test without HTTPS
 
 ```bash
 # .env
@@ -181,9 +181,9 @@ DOMAIN=localhost
 INSECURE_COOKIES=1
 ```
 
-Mit `INSECURE_COOKIES=1` setzt die App das Session-Cookie ohne `Secure`-Flag, und die CSP enthält kein `upgrade-insecure-requests`. So funktioniert der Login auch über `http://`. **Im Internet immer `INSECURE_COOKIES=0` lassen.**
+With `INSECURE_COOKIES=1` the app sets the session cookie without the `Secure` flag, and the CSP contains no `upgrade-insecure-requests`. That way login also works over `http://`. **On the internet, always keep `INSECURE_COOKIES=0`.**
 
-Ohne Docker geht es so (Node.js 24.21 oder neuer 24.x):
+Without Docker (Node.js 24.21 or a later 24.x):
 
 ```bash
 npm ci
@@ -191,35 +191,35 @@ npm run build
 INSECURE_COOKIES=1 npm start
 ```
 
-## Umgebungsvariablen
+## Environment variables
 
-| Variable | Standard | Bedeutung |
+| Variable | Default | Meaning |
 |---|---|---|
-| `DOMAIN` | – | Domain für Caddy |
-| `APP_URL` | `https://$DOMAIN` | Basis-URL für öffentliche Links und Links in Nachrichten (setzen! Sonst gilt die unter *Konto → Dienste* gespeicherte Adresse, ohne diese `http://localhost:3000`) |
-| `TRUST_PROXY` | `1` (Docker), sonst `0` | `1`: IP-Adresse für das Login-Rate-Limit aus `X-Forwarded-For`/`X-Real-IP` lesen; nur hinter dem eigenen Reverse Proxy setzen |
-| `DATA_DIR` | `/app/data` | Ort der SQLite-Datenbank |
-| `UPLOAD_DIR` | `/app/uploads` | Ort der Bilder |
-| `UPLOAD_QUOTA_MB` | `200` | Speicherplatz für Bilder je Kampagne in MB; ist er voll, lehnt die App weitere Uploads dieser Kampagne ab |
-| `INSECURE_COOKIES` | `0` | `1` nur für lokale HTTP-Tests |
-| `TZ` | `Europe/Berlin` | Zeitzone (auch für die Backup-Uhrzeit) |
-| `BACKUP_DIR` | `/app/backups` (Docker), sonst `$DATA_DIR/backups` | Ort der automatischen und manuellen Backups |
-| `BUILD_ID` | neu je Build | Nur beim Build: Version des Service Workers (optional) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | – | E-Mail-Versand (Einstellungen im Konto haben Vorrang); `SMTP_SECURE=1` für Port 465, sonst ist STARTTLS Pflicht |
-| `SMTP_ALLOW_INSECURE` | `0` | `1` erlaubt SMTP ohne erzwungenes TLS (nur lokales Relay) |
-| `SETUP_TOKEN` | – | Fester Einmal-Token für die Ersteinrichtung (mindestens 16 Zeichen); ohne Angabe steht ein zufälliger Token im Log |
-| `DISABLE_SCHEDULER` | `0` | `1` schaltet Versand, automatische Backups, Datenbereinigung und Wartung ab (E2E-Tests) |
-| `GIT_COMMIT`, `SOURCE_COMMIT` | – | Optional: Commit-Kennung für die Health-Seite (`GIT_COMMIT` hat Vorrang) |
-| `NEXT_PUBLIC_FLAVOR` | `neutral` | Nur beim Build: Motive, die im Code gezeichnet sind (Wachssiegel, Wahlsprüche auf den Kartenrahmen): `neutral` oder `imperial`. `next build` bettet den Wert ein (Docker: Build-Argument, siehe `docker-compose.yml`); eine Änderung braucht einen neuen Build |
-| `NEXT_PUBLIC_DEFAULT_LOCALE` | `en` | Nur beim Build: Standardsprache der Installation (`de`, `en`, `fr`, `es`, `pl`). Sie ist der letzte Rückfall der Sprachwahl und belegt die Ersteinrichtung vor, wenn die Browsersprache nicht unterstützt wird. Deutsche Installationen setzen `NEXT_PUBLIC_DEFAULT_LOCALE=de` als Build-Argument (`.env` für `docker compose build` oder `docker build --build-arg NEXT_PUBLIC_DEFAULT_LOCALE=de`). Die bei der Ersteinrichtung gespeicherte Standardsprache (*Administration → Standardsprache*) geht immer vor; bestehende Installationen behalten ihre Sprache auch mit einem neuen Build |
+| `DOMAIN` | – | Domain for Caddy |
+| `APP_URL` | `https://$DOMAIN` | Base URL for public links and links in messages (set it! Otherwise the address saved under *Account → Services* applies, and without that `http://localhost:3000`) |
+| `TRUST_PROXY` | `1` (Docker), otherwise `0` | `1`: read the IP address for the login rate limit from `X-Forwarded-For`/`X-Real-IP`; only set it behind your own reverse proxy |
+| `DATA_DIR` | `/app/data` | Location of the SQLite database |
+| `UPLOAD_DIR` | `/app/uploads` | Location of the images |
+| `UPLOAD_QUOTA_MB` | `200` | Image storage per campaign in MB; when it is full, the app rejects further uploads for that campaign |
+| `INSECURE_COOKIES` | `0` | `1` only for local HTTP tests |
+| `TZ` | `Europe/Berlin` | Time zone (also for the backup time) |
+| `BACKUP_DIR` | `/app/backups` (Docker), otherwise `$DATA_DIR/backups` | Location of automatic and manual backups |
+| `BUILD_ID` | new per build | Build time only: service worker version (optional) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | – | Email delivery (the settings in the account take precedence); `SMTP_SECURE=1` for port 465, otherwise STARTTLS is required |
+| `SMTP_ALLOW_INSECURE` | `0` | `1` allows SMTP without enforced TLS (local relay only) |
+| `SETUP_TOKEN` | – | Fixed one-time token for the first-time setup (at least 16 characters); if not set, a random token is written to the log |
+| `DISABLE_SCHEDULER` | `0` | `1` turns off sending, automatic backups, data cleanup and maintenance (E2E tests) |
+| `GIT_COMMIT`, `SOURCE_COMMIT` | – | Optional: commit ID for the health page (`GIT_COMMIT` takes precedence) |
+| `NEXT_PUBLIC_FLAVOR` | `imperial` | Build time only: motifs drawn in code (wax seals, mottos on the map frames): `imperial` (skull seal, imperial mottos) or `neutral` (compass star, neutral mottos). `next build` embeds the value (Docker: build argument, see `docker-compose.yml`); a change needs a new build |
+| `NEXT_PUBLIC_DEFAULT_LOCALE` | `en` | Build time only: default language of the installation (`de`, `en`, `fr`, `es`, `pl`). It is the last fallback of the language selection and pre-fills the first-time setup when the browser language is not supported. German installations set `NEXT_PUBLIC_DEFAULT_LOCALE=de` as a build argument (`.env` for `docker compose build` or `docker build --build-arg NEXT_PUBLIC_DEFAULT_LOCALE=de`). The default language saved during the first-time setup (*Administration → Default language*) always wins; existing installations keep their language even with a new build |
 
-Alle Laufzeitvariablen mit Kommentaren stehen auch in [`.env.example`](.env.example). `docker-compose.yml` reicht sie (außer `GIT_COMMIT`/`SOURCE_COMMIT`) an den Container weiter.
+All runtime variables are also listed with comments in [`.env.example`](.env.example). `docker-compose.yml` passes them (except `GIT_COMMIT`/`SOURCE_COMMIT`) to the container.
 
-Healthcheck: `GET /api/health`.
+Health check: `GET /api/health`.
 
-## Passwort vergessen
+## Forgotten password
 
-Solange ein Admin existiert, gibt es keinen Reset über die Oberfläche. Notfalls die Tabellen `admin` und `session` in `data/app.db` leeren und die App neu starten. Danach erscheint wieder die Ersteinrichtung, geschützt durch einen neuen Setup-Token, der wie bei der Installation im Log steht (bzw. `SETUP_TOKEN` aus `.env`):
+As long as an admin exists, there is no reset through the interface. If you have to, empty the `admin` and `session` tables in `data/app.db` and restart the app. The first-time setup then appears again, protected by a new setup token that is written to the log as during installation (or `SETUP_TOKEN` from `.env`):
 
 ```bash
 docker compose exec app node -e "const {DatabaseSync}=require('node:sqlite');const d=new DatabaseSync('/app/data/app.db');d.exec('DELETE FROM session; DELETE FROM admin;')"
@@ -227,4 +227,4 @@ docker compose restart app
 docker compose logs app | grep Ersteinrichtung
 ```
 
-Zwischen dem Leeren und dem Neuanlegen kann niemand ohne Token das Konto übernehmen.
+Between emptying the tables and creating the new account, nobody without the token can take over the account.

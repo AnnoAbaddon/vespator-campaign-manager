@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        # Build-Flavor der gezeichneten Motive (neutral | imperial), siehe .env.example
-        NEXT_PUBLIC_FLAVOR: ${NEXT_PUBLIC_FLAVOR:-neutral}
+        # Build-Flavor der gezeichneten Motive (imperial | neutral), siehe .env.example
+        NEXT_PUBLIC_FLAVOR: ${NEXT_PUBLIC_FLAVOR:-imperial}
         # Standardsprache des Builds (de | en | fr | es | pl), siehe .env.example
         NEXT_PUBLIC_DEFAULT_LOCALE: ${NEXT_PUBLIC_DEFAULT_LOCALE:-en}
     restart: unless-stopped
@@ -35,7 +35,7 @@ services:
       - app_data:/app/data
       - app_uploads:/app/uploads
       - app_backups:/app/backups
-    # Härtung (DEPLOY.md „Container-Härtung“): schreibgeschütztes Dateisystem, beschreibbar sind nur die Volumes und
+    # Härtung (DEPLOY.md "Container hardening"): schreibgeschütztes Dateisystem, beschreibbar sind nur die Volumes und
     # die tmpfs-Mounts; keine Linux-Capabilities, keine Rechteausweitung, begrenzter Speicher und Prozesse.
     # Der Container läuft als Nicht-Root-Nutzer "app" (Dockerfile).
     read_only: true

@@ -1,15 +1,16 @@
 /**
  * Build-time flavor of the decorative motifs drawn in code (seal, engraved mottos).
  *
- * `NEXT_PUBLIC_FLAVOR=imperial` gives the code-drawn motifs a Warhammer-40k look (skull seal, imperial mottos);
- * everything else (including unset) gives the neutral look (compass seal, neutral mottos).
+ * The default (unset or any other value) is `imperial`: the code-drawn motifs have a Warhammer-40k look (skull seal,
+ * imperial mottos), matching the images under public/. `NEXT_PUBLIC_FLAVOR=neutral` opts into the neutral look
+ * (compass seal, neutral mottos).
  * The value is inlined by `next build` / `next dev` (NEXT_PUBLIC_ prefix, direct property access required),
  * so changing it needs a rebuild or a dev-server restart. Game content (factions, decree texts, rule terms)
  * is not affected.
  */
 export type Flavor = 'imperial' | 'neutral';
 
-export const FLAVOR: Flavor = process.env.NEXT_PUBLIC_FLAVOR === 'imperial' ? 'imperial' : 'neutral';
+export const FLAVOR: Flavor = process.env.NEXT_PUBLIC_FLAVOR === 'neutral' ? 'neutral' : 'imperial';
 export const IMPERIAL = FLAVOR === 'imperial';
 
 /** Engraved mottos on the frame edges (Latin, not translated; empty string = no cartouche) */

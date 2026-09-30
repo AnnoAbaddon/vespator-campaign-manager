@@ -1,16 +1,34 @@
 # Credits: graphics, fonts and icons
 
-Unofficial fan project; not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and related names and trademarks belong to their respective owners. This repository contains no Games Workshop artwork and no AI-generated images.
+Unofficial fan project; not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and related names and trademarks belong to their respective owners. This repository contains no artwork, logos or scans from Games Workshop products.
 
-## Images: own procedural image pack
-All images under `public/ui/`, `public/art/planets/` and `public/icons/`, and the app icon `src/app/icon.svg`, are generated deterministically by `scripts/neutral-assets.mjs` (geometry, noise and gradients with sharp and resvg; no AI, no third-party templates). Motifs: compass star and laurel, brass fittings, sensor drone, wax seal, procedural planets and landscapes (colour palettes from `src/components/map/PlanetArt.tsx`), starfield and steel hall. They are this project's own work and are covered by the same license as the code (MIT, file `LICENSE` in the repository).
+## Images generated with an AI image model
+The following images were generated with an AI image model, then cropped, cut out and downscaled to WebP by the maintainer. Several motifs deliberately follow the visual language of Warhammer 40,000 (double-headed eagle, winged skulls, servo skull, purity seal, gothic cathedrals, 40k-style landscapes). AI-generated does not automatically mean free of third-party rights, and the MIT license of this repository does not cover them; if you run your own instance and want to be on the safe side, replace them with your own images of the same name and size.
 
-Regenerate: `node scripts/neutral-assets.mjs` (writes to `public/` and `src/app/icon.svg`; the same inputs produce byte-identical files).
+| File(s) | Motif |
+|---|---|
+| `public/art/planets/*.webp` (13) | planet portraits of the Vespator map |
+| `public/ui/land/*.webp` (13) | planet landscapes in the planet dossier |
+| `public/ui/banner-emblem.webp` | banner with double-headed eagle (header) |
+| `public/ui/emblem-winged.webp` | winged skull (brand mark, watermark) |
+| `public/ui/sentinel.webp` | servo skull (login) |
+| `public/ui/seal-ribbon.webp` | purity seal |
+| `public/ui/corner-tl.webp`, `corner-tr.webp`, `corner-bl.webp`, `corner-br.webp` | corner fittings with skull |
+| `public/ui/header-band.webp`, `public/ui/header-niches-l.webp` | gothic architrave and niche in the header |
+| `public/ui/backdrop.webp` | cathedral interior (page background) |
+| `public/ui/cathedral.webp`, `public/ui/login-cathedral.webp`, `public/ui/login-cathedral-sm.webp` | cathedral (sidebar, login) |
+| `public/ui/metal-tile.webp`, `public/ui/space-bg.webp` | metal texture, space (no 40k motif) |
 
-The "Use planet images" switch under *Account → Appearance* chooses between the image files for planet portraits and landscapes (procedurally generated, see above) and planet graphics drawn in the browser, without landscape images.
+The files carry no embedded provenance data (EXIF/XMP/C2PA).
 
-## Original drawings in code
-The map, the procedural planets (`src/components/map/PlanetArt.tsx`), the interface elements (CSS) and the inline SVG emblems in `src/components/emblems.tsx` are this project's own work.
+The "Use planet images" switch under *Administration → Appearance* only affects the planet portraits (`public/art/planets/`) and landscapes (`public/ui/land/`): when it is off, the app shows planets drawn in the browser and no landscape images. The other images above stay visible.
+
+## Original drawings
+- The map, the procedural planets (`src/components/map/PlanetArt.tsx`) and the interface elements (CSS) are this project's own work.
+- App icon `src/app/icon.svg` and the PNGs rendered from it (`public/icons/icon-192.png`, `icon-512.png`, `maskable-512.png`): own drawing (cog with skull, a motif based on Warhammer 40,000).
+- Inline SVG emblems in `src/components/emblems.tsx` (wax seal): own drawings. In the default `imperial` flavor the seal carries a skull (based on Warhammer 40,000); with `NEXT_PUBLIC_FLAVOR=neutral` it carries a compass star.
+
+These drawings are covered by the same license as the code (MIT, file `LICENSE`).
 
 ## Icons from game-icons.net (CC BY 3.0)
 Symbols for Theatres, Infrastructure, operations, Attack Types, events, medals, Alliance crests and armies come from [game-icons.net](https://game-icons.net). They are licensed under [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/). We adjusted their colour and size.

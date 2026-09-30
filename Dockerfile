@@ -14,9 +14,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Flavor der im Code gezeichneten Motive (src/flavor.ts): neutral (Standard, öffentliche Fassung) oder imperial.
+# Flavor der im Code gezeichneten Motive (src/flavor.ts): imperial (Standard) oder neutral.
 # NEXT_PUBLIC_-Variablen werden beim Build eingebettet, daher Build-Argument statt Laufzeitvariable.
-ARG NEXT_PUBLIC_FLAVOR=neutral
+ARG NEXT_PUBLIC_FLAVOR=imperial
 ENV NEXT_PUBLIC_FLAVOR=${NEXT_PUBLIC_FLAVOR}
 # Standardsprache des Builds (src/i18n/defaultLocale.ts): de | en | fr | es | pl, Standard en (öffentliche Fassung).
 # Letzter Rückfall der Sprachwahl; eine bei der Ersteinrichtung gespeicherte Standardsprache geht immer vor.

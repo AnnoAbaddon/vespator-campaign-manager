@@ -12,7 +12,7 @@ import type { CampaignState } from '@/engine/types';
  * automatische Bereinigung nach Kampagnenende. Gelöscht wird in allen Revisionen (die Historie behält sonst die
  * Daten), in den Sandboxes der Kampagne und in der Outbox; jede Löschung steht im Verwaltungsprotokoll.
  * Automatische Backups auf der Platte rotieren heraus (14 tägliche, 5 manuelle je Kampagne; Datenbank-Sicherungen
- * 7 Tage) – bis dahin stehen die Daten noch in älteren Sicherungen (DEPLOY.md, „Backups und Datenschutz“).
+ * 7 Tage) – bis dahin stehen die Daten noch in älteren Sicherungen (DEPLOY.md, "Backups and privacy").
  */
 
 export function exportPlayer(campaignId: string, playerId: string) {

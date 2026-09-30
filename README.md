@@ -127,7 +127,7 @@ docker compose up -d --build
 docker compose logs app | grep Ersteinrichtung   # one-time setup link
 ```
 
-[DEPLOY.md](DEPLOY.md) (German) covers volumes, backups and restore, notifications, sessions, hardening and updates.
+[DEPLOY.md](DEPLOY.md) covers volumes, backups and restore, notifications, sessions, hardening and updates.
 
 ## Configuration
 
@@ -145,7 +145,7 @@ docker compose logs app | grep Ersteinrichtung   # one-time setup link
 | `UPLOAD_QUOTA_MB` | Image storage per campaign (default 200) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | E-mail; can also be set in the app under *Account* |
 | `DISABLE_SCHEDULER` | `1` = switch off background jobs (outbox, reminders, backups) |
-| `NEXT_PUBLIC_FLAVOR` | Build time: `neutral` (default) or `imperial` look of drawn motifs |
+| `NEXT_PUBLIC_FLAVOR` | Build time: `imperial` (default) or `neutral` look of drawn motifs |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | Build time: default language `de`, `en` (default), `fr`, `es` or `pl`; the default language chosen at first setup takes precedence |
 
 Discord webhooks, the Discord bot and web push are configured in the app (*Account → Services* and the campaign settings), not through environment variables.
@@ -205,7 +205,7 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs lint,
 
 Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, checks, translations and the engine. Please report vulnerabilities privately ([SECURITY.md](SECURITY.md)) and follow the [code of conduct](CODE_OF_CONDUCT.md). Ideas go into a GitHub issue ("Feature request").
 
-- Translation keys, code comments and most existing documents are in German; identifiers are in English. Please write new developer documentation in English if you can.
+- Translation keys and code comments are in German, identifiers and documentation in English. Please write new documentation in English.
 - After `npm install <package>` on Windows, `package-lock.json` sometimes lacks the Linux entries, and `npm ci` in Docker then fails. Regenerate the lock file in a Linux container:
 
   ```bash
@@ -216,7 +216,7 @@ Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, chec
 
 The source code is licensed under the [MIT License](LICENSE).
 
-The license covers only the project's own code and documentation. Fonts, icons, textures and other third-party assets keep their own licenses; see [CREDITS.md](CREDITS.md) and the license files next to them. The MIT license grants no rights to Games Workshop trademarks, names or content, or to the book *500 Worlds: Titus*.
+The license covers only the project's own code and documentation. Fonts and icons keep their own licenses, and the decorative images under `public/` (planet portraits, landscapes, header, frames, backgrounds) were generated with an AI image model and are not covered by the MIT license; see [CREDITS.md](CREDITS.md) and the license files next to them. The MIT license grants no rights to Games Workshop trademarks, names or content, or to the book *500 Worlds: Titus*.
 
 ## Further documentation
 

@@ -5,7 +5,7 @@ Thanks for your interest in the Vespator Front Campaign Manager. It is an unoffi
 ## Ground rules
 
 - Do not add text from *500 Worlds: Titus* or other Games Workshop publications (rules, mission text, lore), including short verbatim quotes. Describe mechanics in your own words and refer to the book. Rules clarifications go into [docs/FAQ.md](docs/FAQ.md) / [docs/FAQ.en.md](docs/FAQ.en.md), paraphrased, with links to public sources.
-- Do not add AI-generated images of any kind, or artwork, logos or scans from Games Workshop products. New images, icons and fonts need a clear license that allows redistribution; add the source and license to the credits files.
+- Contributions must not add AI-generated images or artwork, logos or scans from Games Workshop products. The images already in the repository are listed with their origin in [CREDITS.md](CREDITS.md). New images, icons and fonts need a clear license that allows redistribution; add the source and license to CREDITS.md.
 - Keep secrets and personal data out of code, tests, fixtures, screenshots and issues. That means no real player names, e-mail addresses, player links, tokens or database backups. Demo and test data must be obviously synthetic.
 - By contributing you agree that your contribution is licensed under the [MIT License](LICENSE) of this project.
 - Be kind; see the [Code of Conduct](CODE_OF_CONDUCT.md).
@@ -57,7 +57,7 @@ Every behaviour change needs a unit test in `tests/engine/*.test.ts` (engine) or
 
 ## Language convention
 
-Translation keys, code comments and most existing documents are in German; identifiers are in English. Please write new developer documentation in English if you can. Pull requests and issues can be in English or German.
+Translation keys and code comments are in German, identifiers and documentation in English. Please write new documentation in English. Pull requests and issues can be in English or German.
 
 ## UI conventions
 
@@ -70,7 +70,7 @@ Runtime variables are documented in [.env.example](.env.example). These are only
 | Variable | Used by | Purpose |
 | --- | --- | --- |
 | `BUILD_ID` | `next.config.ts`, Dockerfile build arg | Service worker cache version; defaults to a new value per build |
-| `NEXT_PUBLIC_FLAVOR` | `src/flavor.ts`, Dockerfile build arg, `docker-compose.yml` | Look of the motifs drawn in code: `neutral` (default; neutral wax seal with compass sigil, mottos "Ordo et Vigilia" / "Lex Belli") or `imperial` (skull seal, "Imperium omnia vincit" / "Lex imperialis"). Inlined at build time: rebuild or restart `next dev` after changing it. Game content is not affected |
+| `NEXT_PUBLIC_FLAVOR` | `src/flavor.ts`, Dockerfile build arg, `docker-compose.yml` | Look of the motifs drawn in code: `imperial` (default when unset; skull seal, mottos "Imperium omnia vincit" / "Lex imperialis") or `neutral` (wax seal with compass sigil, "Ordo et Vigilia" / "Lex Belli"). Inlined at build time: rebuild or restart `next dev` after changing it. Game content is not affected |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | `src/i18n/defaultLocale.ts`, Dockerfile build arg, `docker-compose.yml`, `public/sw.js` (via `?dl=`) | Build default language: `de`, `en` (default when unset or unknown), `fr`, `es`, `pl`. Last step of the language resolution (`?lang` → cookie → account/player/campaign → stored `defaultLocale` setting → Accept-Language → this), fallback of client components without a locale and of the service-worker offline page. Inlined at build time. Vitest runs with it unset (English); tests that expect German texts set it in `vi.hoisted` before their imports. The E2E browser uses `locale: 'de-DE'`, so the E2E suite is German in both builds |
 | `NEXT_DIST_DIR` | `next.config.ts`, `src/server/health.ts` | Alternative build directory (e.g. to run several dev servers in parallel); default `.next` |
 | `NEXT_TELEMETRY_DISABLED` | Dockerfile | Disables Next.js telemetry |
